@@ -24,7 +24,7 @@ public class AuthService {
             ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
             if (response.getStatusCode() == HttpStatus.OK && "true".equals(response.getBody())) {
                 // Autenticação bem-sucedida
-                this.authToken = apiKey; // Use a chave de API como token
+                this.authToken = apiKey;
             } else {
                 throw new RuntimeException("Failed to authenticate with SPTrans API");
             }

@@ -9,8 +9,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
-public class LocalBus {
+public class PosicaoBus {
 
     private String p;
     private boolean a;
@@ -19,5 +18,4 @@ public class LocalBus {
     private double px;
     private Object sv;
     private Object is;
-
 }

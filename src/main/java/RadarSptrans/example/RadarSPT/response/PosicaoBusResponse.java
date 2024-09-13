@@ -4,14 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 
-public class LinhasLocais {
+public class PosicaoBusResponse {
 
-    public String hr;
-    public ArrayList<LocalBus> vs;
+    private String hr;
+    private List<PosicaoBus> vs;
 }

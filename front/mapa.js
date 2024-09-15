@@ -6,10 +6,25 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
 
-// Função para adicionar um marcador no mapa
-function addMarker(lat, lon, label) {
+// Definindo ícones personalizados
+const userIcon = L.icon({
+    iconUrl: 'house.png', // Ícone de casinha
+    iconSize: [32, 32], // Tamanho do ícone
+    iconAnchor: [16, 32], // Posição da âncora do ícone (base)
+    popupAnchor: [0, -32]  // Posição da âncora do popup em relação ao ícone
+});
+
+const vehicleIcon = L.icon({
+    iconUrl: 'bus.png', // Ícone de carrinho ou ônibus
+    iconSize: [32, 32], // Tamanho do ícone
+    iconAnchor: [16, 32], // Posição da âncora do ícone (base)
+    popupAnchor: [0, -32]  // Posição da âncora do popup em relação ao ícone
+});
+
+// Função para adicionar um marcador no mapa com ícone personalizado
+function addMarker(lat, lon, label, icon) {
     if (lat && lon) {
-        L.marker([lat, lon]).addTo(map)
+        L.marker([lat, lon], { icon }).addTo(map)
             .bindPopup(label)
             .openPopup();
     } else {
@@ -30,11 +45,11 @@ async function fetchVehicleLocations() {
         // Itera sobre os veículos no array 'vs'
         data.vs.forEach(vehicle => {
             const { py: latitude, px: longitude, p: id } = vehicle;
-            console.log(`Adicionando veículo ${id} em [${latitude}, ${longitude}]`);
+            console.log(`Adicionando veículo ${id} em [${latitude, longitude}]`);
 
-            // Adiciona um marcador no mapa para cada veículo
+            // Adiciona um marcador no mapa para cada veículo com ícone de carrinho ou ônibus
             if (latitude && longitude) {
-                addMarker(latitude, longitude, `Veículo ${id}`);
+                addMarker(latitude, longitude, `Veículo ${id}`, vehicleIcon);
             }
         });
     } catch (error) {
@@ -52,8 +67,8 @@ function centerMapOnLocation() {
             // Centraliza o mapa na localização do usuário
             map.setView([userLat, userLon], 12);
 
-            // Adiciona um marcador para a localização do usuário
-            addMarker(userLat, userLon, 'Você está aqui!');
+            // Adiciona um marcador para a localização do usuário com ícone de casinha
+            addMarker(userLat, userLon, 'Você está aqui!', userIcon);
 
             // Busca os veículos da API e adiciona no mapa
             fetchVehicleLocations();

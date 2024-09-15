@@ -43,8 +43,6 @@ public class SpTransController {
             if (indice < 1 || indice > linhas.size()) {
                 throw new IllegalArgumentException("Índice inválido.");
             }
-
-            // Retorna a linha correspondente ao índice (subtraindo 1 para corresponder ao índice da lista)
             return spTransClient.localBus(String.valueOf(linhas.get(indice - 1).getCl()), sessionCookie);
         } else {
             throw new RuntimeException("Autenticação falhou.");

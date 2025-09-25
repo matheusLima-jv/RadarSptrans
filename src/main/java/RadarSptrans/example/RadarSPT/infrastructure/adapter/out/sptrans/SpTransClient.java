@@ -1,7 +1,7 @@
-package RadarSptrans.example.RadarSPT.client;
+package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
-import RadarSptrans.example.RadarSPT.response.LinhaResponse;
-import RadarSptrans.example.RadarSPT.response.PosicaoBusResponse;
+import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
+import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -17,6 +17,6 @@ public interface SpTransClient {
                                     @RequestHeader("Cookie") String sessionCookie);
 
     @GetMapping("/Posicao/Linha")
-    PosicaoBusResponse localBus(@RequestParam("codigoLinha") String  codigoLinha,
+    PosicaoBusResponse localBus(@RequestParam("codigoLinha") String codigoLinha,
                                 @RequestHeader("Cookie") String sessionCookie);
 }

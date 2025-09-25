@@ -1,4 +1,4 @@
-package RadarSptrans.example.RadarSPT.client;
+package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
 import feign.Headers;
 import feign.Response;

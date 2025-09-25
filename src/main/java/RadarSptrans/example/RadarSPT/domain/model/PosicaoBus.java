@@ -1,4 +1,4 @@
-package RadarSptrans.example.RadarSPT.response;
+package RadarSptrans.example.RadarSPT.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,15 +1,12 @@
-package RadarSptrans.example.RadarSPT.response;
+package RadarSptrans.example.RadarSPT.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class LinhaResponse {
     private int cl;
     private boolean lc;
@@ -18,5 +15,4 @@ public class LinhaResponse {
     private int tl;
     private String tp;
     private String ts;
-
 }

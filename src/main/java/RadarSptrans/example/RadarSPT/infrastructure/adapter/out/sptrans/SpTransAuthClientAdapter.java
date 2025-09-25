@@ -1,8 +1,11 @@
 package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
+import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
+import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
 import RadarSptrans.example.RadarSPT.domain.port.out.AutenticacaoPort;
 import feign.Response;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -22,13 +25,13 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
     @Override
     public String autenticar() {
         Response authResponse = authClient.autenticar(apiToken);
-        if (authResponse.status() == 200) {
+        if (authResponse.status() == HttpStatus.OK.value()) {
             Collection<String> cookies = authResponse.headers().get("Set-Cookie");
             if (cookies != null && !cookies.isEmpty()) {
                 return cookies.iterator().next();
             }
-            throw new RuntimeException("Falha ao capturar o cookie de sessão.");
+            throw new CookieSessaoNaoEncontradoException();
         }
-        throw new RuntimeException("Autenticação falhou.");
+        throw new AutenticacaoException();
     }
 }

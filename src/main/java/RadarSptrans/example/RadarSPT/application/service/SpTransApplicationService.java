@@ -1,5 +1,6 @@
 package RadarSptrans.example.RadarSPT.application.service;
 
+import RadarSptrans.example.RadarSPT.domain.exception.IndiceLinhaInvalidoException;
 import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
 import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
@@ -26,7 +27,7 @@ public class SpTransApplicationService implements BuscarPosicaoPorCodigoUseCase,
         String sessionCookie = autenticacaoPort.autenticar();
         List<LinhaResponse> linhas = spTransDadosPort.buscarLinha(termosBusca, sessionCookie);
         if (indice < 1 || indice > linhas.size()) {
-            throw new IllegalArgumentException("Índice inválido.");
+            throw new IndiceLinhaInvalidoException();
         }
         String codigoLinha = String.valueOf(linhas.get(indice - 1).getCl());
         return spTransDadosPort.buscarPosicaoLinha(codigoLinha, sessionCookie);

@@ -27,16 +27,21 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
     @Override
     public String autenticar() {
         Response authResponse = authClient.autenticar(apiToken);
-        if (authResponse.status() == HttpStatus.OK.value()) {
-            Collection<String> cookies = authResponse.headers().get("Set-Cookie");
-            if (cookies != null && !cookies.isEmpty()) {
-                String rawCookie = cookies.iterator().next();
-                String sanitizedCookie = CookieSanitizer.sanitize(rawCookie);
-                if (!sanitizedCookie.isEmpty()) {
-                    return sanitizedCookie;
+        try {
+            if (authResponse.status() == HttpStatus.OK.value()) {
+                Collection<String> cookies = authResponse.headers().get("Set-Cookie");
+                if (cookies != null && !cookies.isEmpty()) {
+                    String rawCookie = cookies.iterator().next();
+                    String sanitizedCookie = CookieSanitizer.sanitize(rawCookie);
+                    if (!sanitizedCookie.isEmpty()) {
+                        return sanitizedCookie;
+                    }
                 }
+                throw new CookieSessaoNaoEncontradoException();
             }
             throw new AutenticacaoException();
+        } finally {
+            authResponse.close();
         }
     }
 

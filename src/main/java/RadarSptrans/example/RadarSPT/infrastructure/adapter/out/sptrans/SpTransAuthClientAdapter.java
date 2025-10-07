@@ -36,9 +36,8 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
                     return sanitizedCookie;
                 }
             }
-            throw new CookieSessaoNaoEncontradoException();
+            throw new AutenticacaoException();
         }
-        throw new AutenticacaoException();
     }
 
     private String sanitizeCookie(String rawCookie) {

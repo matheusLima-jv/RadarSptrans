@@ -10,7 +10,7 @@ O **RadarSptrans** é uma API Spring Boot que consulta o serviço público Olho 
   - `SpTransAuthClientAdapter` realiza a autenticação no serviço Olho Vivo e captura o cookie de sessão.
   - `SpTransClientAdapter` consome os endpoints de busca e posição através do OpenFeign.
   - `SpTransController` expõe os endpoints REST `/api/sptrans`.
-- **Configuração adicional**: `WebConfig` habilita CORS para o front-end.
+- **Configuração adicional**: `WebConfig` habilita CORS para o front-end com base na propriedade `sptrans.cors.allowed-origins`.
 
 ## ✅ Pré-requisitos
 - **Java 17**

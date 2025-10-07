@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.net.HttpCookie;
 import java.util.Collection;
+import java.util.List;
 
 @Component
 public class SpTransAuthClientAdapter implements AutenticacaoPort {
@@ -37,5 +39,19 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
             throw new CookieSessaoNaoEncontradoException();
         }
         throw new AutenticacaoException();
+    }
+
+    private String sanitizeCookie(String rawCookie) {
+        try {
+            List<HttpCookie> parsedCookies = HttpCookie.parse(rawCookie);
+            if (!parsedCookies.isEmpty()) {
+                HttpCookie cookie = parsedCookies.get(0);
+                return cookie.getName() + "=" + cookie.getValue();
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Caso não seja possível realizar o parse, utiliza fallback manual abaixo.
+        }
+        int delimiterIndex = rawCookie.indexOf(';');
+        return delimiterIndex >= 0 ? rawCookie.substring(0, delimiterIndex) : rawCookie;
     }
 }

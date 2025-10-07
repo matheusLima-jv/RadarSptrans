@@ -2,6 +2,7 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
+import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
 import feign.Request;
 import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SpTransAuthClientAdapterTest {
@@ -49,6 +51,16 @@ class SpTransAuthClientAdapterTest {
     }
 
     @Test
+    void deveManterCookieSemAtributosQuandoAutenticacaoSucesso() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("session=abc123")));
+        when(authClient.autenticar("token")).thenReturn(response);
+
+        String cookie = adapter.autenticar();
+
+        assertEquals("session=abc123", cookie);
+    }
+
+    @Test
     void deveLancarExcecaoQuandoCookieNaoEncontrado() {
         Response response = criarResposta(200, Map.of());
         when(authClient.autenticar("token")).thenReturn(response);
@@ -64,6 +76,19 @@ class SpTransAuthClientAdapterTest {
 
         AutenticacaoException exception = assertThrows(AutenticacaoException.class, adapter::autenticar);
         assertEquals("Falha ao autenticar com o serviço SPTrans.", exception.getMessage());
+    }
+
+    @Test
+    void deveEnviarCookieSanitizadoAoClienteFeign() {
+        SpTransClient spTransClient = mock(SpTransClient.class);
+        SpTransClientAdapter spTransClientAdapter = new SpTransClientAdapter(spTransClient);
+        List<LinhaResponse> respostaEsperada = List.of();
+        when(spTransClient.buscarLinha("busca", "cookie=valor")).thenReturn(respostaEsperada);
+
+        List<LinhaResponse> resposta = spTransClientAdapter.buscarLinha("busca", "cookie=valor");
+
+        assertEquals(respostaEsperada, resposta);
+        verify(spTransClient).buscarLinha("busca", "cookie=valor");
     }
 
     private Response criarResposta(int status, Map<String, Collection<String>> headers) {

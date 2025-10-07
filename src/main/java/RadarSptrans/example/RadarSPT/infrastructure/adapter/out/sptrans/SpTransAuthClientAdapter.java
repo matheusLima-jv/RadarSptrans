@@ -31,7 +31,10 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
             Collection<String> cookies = authResponse.headers().get("Set-Cookie");
             if (cookies != null && !cookies.isEmpty()) {
                 String rawCookie = cookies.iterator().next();
-                return sanitizeCookie(rawCookie);
+                String sanitizedCookie = CookieSanitizer.sanitize(rawCookie);
+                if (!sanitizedCookie.isEmpty()) {
+                    return sanitizedCookie;
+                }
             }
             throw new CookieSessaoNaoEncontradoException();
         }

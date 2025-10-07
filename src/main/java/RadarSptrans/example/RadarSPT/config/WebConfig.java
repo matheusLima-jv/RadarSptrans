@@ -2,6 +2,7 @@ package RadarSptrans.example.RadarSPT.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -12,11 +13,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final String[] allowedOrigins;
 
-    public WebConfig(@Value("${sptrans.cors.allowed-origins:http://localhost:5500,http://127.0.0.1:5500}") List<String> allowedOrigins) {
-        this.allowedOrigins = allowedOrigins.stream()
-                .map(String::trim)
-                .filter(origin -> !origin.isEmpty())
-                .toArray(String[]::new);
+    public WebConfig(@Value("${sptrans.cors.allowed-origins:http://localhost:5500,http://127.0.0.1:5500}")
+                     String allowedOriginsProperty) {
+        this.allowedOrigins = StringUtils.tokenizeToStringArray(allowedOriginsProperty, ",");
     }
 
     @Override

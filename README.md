@@ -23,11 +23,11 @@ O **RadarSptrans** é uma API Spring Boot que consulta o serviço público Olho 
    ```bash
    export SPRING_APPLICATION_JSON='{"sptrans":{"api":{"token":"SEU_TOKEN_AQUI"}}}'
    ```
-3. Ajuste as origens permitidas para CORS, se necessário. Por padrão, `sptrans.cors.allowed-origins` aceita `http://localhost:5500` e `http://127.0.0.1:5500`. Para alterar via variável de ambiente, exporte:
+3. Ajuste as origens permitidas configurando a propriedade `sptrans.cors.allowed-origins`. Por padrão ela já inclui `http://localhost:5500` e `http://127.0.0.1:5500`, mas você pode sobrescrevê-la no `application.properties` ou via variável de ambiente:
    ```bash
-   export SPTRANS_CORS_ALLOWED_ORIGINS="http://localhost:5500,http://127.0.0.1:5500"
+   export SPRING_APPLICATION_JSON='{"sptrans":{"cors":{"allowed-origins":"https://minhaapp.com,https://admin.minhaapp.com"}}}'
    ```
-   Também é possível usar `SPRING_APPLICATION_JSON` conforme o exemplo anterior.
+   > Use uma lista separada por vírgulas para definir todas as origens necessárias em ambientes de produção ou desenvolvimento.
 
 > ⚠️ O token presente no repositório é apenas ilustrativo. Gere seu próprio token no [portal da SPTrans](http://www.sptrans.com.br/desenvolvedores/).
 

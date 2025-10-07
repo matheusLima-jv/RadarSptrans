@@ -18,11 +18,11 @@ public class SpTransClientAdapter implements SpTransDadosPort {
 
     @Override
     public List<LinhaResponse> buscarLinha(String termosBusca, String sessionCookie) {
-        return spTransClient.buscarLinha(termosBusca, sessionCookie);
+        return spTransClient.buscarLinha(termosBusca, CookieSanitizer.sanitize(sessionCookie));
     }
 
     @Override
     public PosicaoBusResponse buscarPosicaoLinha(String codigoLinha, String sessionCookie) {
-        return spTransClient.localBus(codigoLinha, sessionCookie);
+        return spTransClient.localBus(codigoLinha, CookieSanitizer.sanitize(sessionCookie));
     }
 }

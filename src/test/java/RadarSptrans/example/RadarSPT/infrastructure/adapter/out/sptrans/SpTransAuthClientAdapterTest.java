@@ -29,8 +29,18 @@ class SpTransAuthClientAdapterTest {
     }
 
     @Test
-    void deveRetornarCookieQuandoAutenticacaoSucesso() {
-        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("cookie=valor")));
+    void deveRetornarCookieSaneadoQuandoAutenticacaoSucesso() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("cookie=valor; Path=/; HttpOnly")));
+        when(authClient.autenticar("token")).thenReturn(response);
+
+        String cookie = adapter.autenticar();
+
+        assertEquals("cookie=valor", cookie);
+    }
+
+    @Test
+    void deveRetornarCookieMesmoQuandoFormatoNaoEhReconhecidoPeloParser() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("cookie=valor;secure")));
         when(authClient.autenticar("token")).thenReturn(response);
 
         String cookie = adapter.autenticar();

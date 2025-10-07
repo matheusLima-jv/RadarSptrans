@@ -3,11 +3,11 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
 import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
-import feign.Request;
 import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,16 +96,9 @@ class SpTransAuthClientAdapterTest {
     }
 
     private Response criarResposta(int status, Map<String, Collection<String>> headers) {
-        Request request = Request.create(Request.HttpMethod.POST,
-                "https://api.olhovivo.sptrans.com.br/v2.1/Login/Autenticar",
-                Map.of(),
-                null,
-                StandardCharsets.UTF_8,
-                null);
-        return Response.builder()
-                .status(status)
-                .headers(headers)
-                .request(request)
-                .build();
+        Response response = mock(Response.class);
+        when(response.status()).thenReturn(status);
+        when(response.headers()).thenReturn(headers);
+        return response;
     }
 }

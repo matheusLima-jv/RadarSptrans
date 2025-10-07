@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
+import java.net.HttpCookie;
 import java.util.Collection;
+import java.util.List;
 
 @Component
 public class SpTransAuthClientAdapter implements AutenticacaoPort {
@@ -24,15 +26,31 @@ public class SpTransAuthClientAdapter implements AutenticacaoPort {
 
     @Override
     public String autenticar() {
-        try (Response authResponse = authClient.autenticar(apiToken)) {
-            if (authResponse.status() == HttpStatus.OK.value()) {
-                Collection<String> cookies = authResponse.headers().get("Set-Cookie");
-                if (cookies != null && !cookies.isEmpty()) {
-                    return cookies.iterator().next();
+        Response authResponse = authClient.autenticar(apiToken);
+        if (authResponse.status() == HttpStatus.OK.value()) {
+            Collection<String> cookies = authResponse.headers().get("Set-Cookie");
+            if (cookies != null && !cookies.isEmpty()) {
+                String rawCookie = cookies.iterator().next();
+                String sanitizedCookie = CookieSanitizer.sanitize(rawCookie);
+                if (!sanitizedCookie.isEmpty()) {
+                    return sanitizedCookie;
                 }
-                throw new CookieSessaoNaoEncontradoException();
             }
             throw new AutenticacaoException();
         }
+    }
+
+    private String sanitizeCookie(String rawCookie) {
+        try {
+            List<HttpCookie> parsedCookies = HttpCookie.parse(rawCookie);
+            if (!parsedCookies.isEmpty()) {
+                HttpCookie cookie = parsedCookies.get(0);
+                return cookie.getName() + "=" + cookie.getValue();
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Caso não seja possível realizar o parse, utiliza fallback manual abaixo.
+        }
+        int delimiterIndex = rawCookie.indexOf(';');
+        return delimiterIndex >= 0 ? rawCookie.substring(0, delimiterIndex) : rawCookie;
     }
 }

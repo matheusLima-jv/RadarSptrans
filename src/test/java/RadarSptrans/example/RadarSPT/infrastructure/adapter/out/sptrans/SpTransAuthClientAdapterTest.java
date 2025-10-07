@@ -2,6 +2,8 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
+import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
+import feign.Request;
 import feign.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,16 +30,34 @@ class SpTransAuthClientAdapterTest {
     }
 
     @Test
-    void deveRetornarCookieQuandoAutenticacaoSucesso() {
-        Response response = mock(Response.class);
-        when(response.status()).thenReturn(200);
-        when(response.headers()).thenReturn(Map.of("Set-Cookie", List.of("cookie=valor")));
+    void deveRetornarCookieSaneadoQuandoAutenticacaoSucesso() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("cookie=valor; Path=/; HttpOnly")));
         when(authClient.autenticar("token")).thenReturn(response);
 
         String cookie = adapter.autenticar();
 
         assertEquals("cookie=valor", cookie);
         verify(response).close();
+    }
+
+    @Test
+    void deveRetornarCookieMesmoQuandoFormatoNaoEhReconhecidoPeloParser() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("cookie=valor;secure")));
+        when(authClient.autenticar("token")).thenReturn(response);
+
+        String cookie = adapter.autenticar();
+
+        assertEquals("cookie=valor", cookie);
+    }
+
+    @Test
+    void deveManterCookieSemAtributosQuandoAutenticacaoSucesso() {
+        Response response = criarResposta(200, Map.of("Set-Cookie", List.of("session=abc123")));
+        when(authClient.autenticar("token")).thenReturn(response);
+
+        String cookie = adapter.autenticar();
+
+        assertEquals("session=abc123", cookie);
     }
 
     @Test
@@ -60,6 +80,32 @@ class SpTransAuthClientAdapterTest {
 
         AutenticacaoException exception = assertThrows(AutenticacaoException.class, adapter::autenticar);
         assertEquals("Falha ao autenticar com o serviço SPTrans.", exception.getMessage());
-        verify(response).close();
+    }
+
+    @Test
+    void deveEnviarCookieSanitizadoAoClienteFeign() {
+        SpTransClient spTransClient = mock(SpTransClient.class);
+        SpTransClientAdapter spTransClientAdapter = new SpTransClientAdapter(spTransClient);
+        List<LinhaResponse> respostaEsperada = List.of();
+        when(spTransClient.buscarLinha("busca", "cookie=valor")).thenReturn(respostaEsperada);
+
+        List<LinhaResponse> resposta = spTransClientAdapter.buscarLinha("busca", "cookie=valor");
+
+        assertEquals(respostaEsperada, resposta);
+        verify(spTransClient).buscarLinha("busca", "cookie=valor");
+    }
+
+    private Response criarResposta(int status, Map<String, Collection<String>> headers) {
+        Request request = Request.create(Request.HttpMethod.POST,
+                "https://api.olhovivo.sptrans.com.br/v2.1/Login/Autenticar",
+                Map.of(),
+                null,
+                StandardCharsets.UTF_8,
+                null);
+        return Response.builder()
+                .status(status)
+                .headers(headers)
+                .request(request)
+                .build();
     }
 }

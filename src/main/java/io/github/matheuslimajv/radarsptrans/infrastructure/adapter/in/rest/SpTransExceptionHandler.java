@@ -4,6 +4,7 @@ import io.github.matheuslimajv.radarsptrans.domain.exception.AutenticacaoExcepti
 import io.github.matheuslimajv.radarsptrans.domain.exception.CookieSessaoNaoEncontradoException;
 import io.github.matheuslimajv.radarsptrans.domain.exception.DadosProgramadosIndisponiveisException;
 import io.github.matheuslimajv.radarsptrans.domain.exception.IndiceLinhaInvalidoException;
+import io.github.matheuslimajv.radarsptrans.domain.exception.ItinerarioNaoEncontradoException;
 import io.github.matheuslimajv.radarsptrans.domain.exception.SessaoExpiradaException;
 import io.github.matheuslimajv.radarsptrans.domain.exception.SpTransIndisponivelException;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ public class SpTransExceptionHandler {
     private static final String CODE_COOKIE_NAO_ENCONTRADO = "COOKIE_SESSAO_NAO_ENCONTRADO";
     private static final String CODE_SPTRANS_INDISPONIVEL = "SPTRANS_INDISPONIVEL";
     private static final String CODE_DADOS_PROGRAMADOS_INDISPONIVEIS = "DADOS_PROGRAMADOS_INDISPONIVEIS";
+    private static final String CODE_ITINERARIO_NAO_ENCONTRADO = "ITINERARIO_NAO_ENCONTRADO";
 
     @ExceptionHandler(IndiceLinhaInvalidoException.class)
     public ResponseEntity<ApiErrorResponse> handleIndiceLinhaInvalido(IndiceLinhaInvalidoException exception) {
@@ -65,6 +67,11 @@ public class SpTransExceptionHandler {
             DadosProgramadosIndisponiveisException exception) {
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, CODE_DADOS_PROGRAMADOS_INDISPONIVEIS,
                 exception.getMessage());
+    }
+
+    @ExceptionHandler(ItinerarioNaoEncontradoException.class)
+    public ResponseEntity<ApiErrorResponse> handleItinerarioNaoEncontrado(ItinerarioNaoEncontradoException exception) {
+        return buildResponse(HttpStatus.NOT_FOUND, CODE_ITINERARIO_NAO_ENCONTRADO, exception.getMessage());
     }
 
     private String mensagemParametroInvalido(Exception exception) {

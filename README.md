@@ -48,10 +48,19 @@ docker run -e SPTRANS_API_TOKEN=SEU_TOKEN -p 8080:8080 radarsptrans
 ```
 O mapa fica em `http://localhost:8080/` e o health check em `/actuator/health`.
 
-## 🗺️ Mapa
-Busque uma linha pelo painel e escolha o sentido: os ônibus aparecem no mapa, atualizados a cada 15 segundos (a atualização pausa com a aba em segundo plano). Com a localização do navegador, ou clicando no mapa para definir sua posição, o mapa mostra:
-- as paradas a até 400 m, com as linhas que passam em cada uma;
-- a parada da linha escolhida mais próxima de você, com o próximo ônibus e o intervalo programado.
+## 🗺️ Rastreio no mapa
+Abra `http://localhost:8080/`:
+1. **Busque a linha** pelo número ou nome (ex.: `848L`). Os resultados aparecem enquanto você digita, agrupados por letreiro.
+2. **Escolha o destino**: cada linha aparece como "Para TERM. PIRITUBA" / "Para RECANTO DOS HUMILDES".
+3. **Informe onde você está**: GPS ou toque no mapa.
+4. **Acompanhe o ônibus**: o app destaca o próximo ônibus da linha a passar pela parada dela mais próxima de você e mostra:
+   - em quantos minutos ele chega e em qual parada;
+   - quantas paradas faltam, a distância até a parada e há quanto tempo a posição foi atualizada (com alerta quando passa de 2 min);
+   - o intervalo programado da linha e a lista dos próximos ônibus (toque em um para rastreá-lo).
+
+Com "Seguir o ônibus no mapa" ligado, o mapa enquadra o ônibus, a sua parada e você a cada atualização (15 s); arrastar o mapa desliga o seguir. Tocar num ônibus no mapa passa a rastreá-lo. Sem nenhum ônibus a caminho, o app mostra o ônibus da linha mais perto de você e avisa que ele não vai passar pela sua parada.
+
+O endereço fica com a linha escolhida (`/?linha=848L-10&sentido=1`), então dá para salvar ou compartilhar o link. A atualização pausa com a aba em segundo plano. A seta nos ônibus indica a direção calculada entre duas posições seguidas.
 
 ## 🌐 Endpoints
 A autenticação na SPTrans é feita pela própria API. Horários são no fuso de São Paulo.
@@ -97,6 +106,9 @@ Como cada campo é calculado:
   - `SEM_DADOS`: nenhum ônibus a caminho.
 - **`intervaloObservadoMinutos`**: intervalo médio entre as chegadas em tempo real (precisa de pelo menos 2).
 
+### `GET /api/sptrans/itinerario?letreiro=&sentido=`
+Paradas da linha em ordem de passagem, com o tempo de percurso programado desde a primeira (`segundosDesdeInicio`), os dias de operação e as faixas de intervalo (GTFS). Responde 404 se a linha não está no GTFS.
+
 ### `GET /api/sptrans/buscar?termosBusca=&indice=` (descontinuado)
 Retorna a posição da linha na posição `indice` da busca. O índice depende da ordem da SPTrans; use `/linhas` + `/posicao`. A resposta traz o cabeçalho `Deprecation: true`.
 
@@ -110,6 +122,7 @@ Erros retornam `{"code": "...", "message": "..."}`:
 | 502 | `AUTENTICACAO_FALHOU` | Token ausente ou recusado pela SPTrans. |
 | 502 | `COOKIE_SESSAO_NAO_ENCONTRADO` | SPTrans não devolveu cookie de sessão. |
 | 502 | `SPTRANS_INDISPONIVEL` | Timeout, falha de rede ou erro HTTP da SPTrans. |
+| 404 | `ITINERARIO_NAO_ENCONTRADO` | Linha/sentido sem itinerário no GTFS. |
 | 503 | `DADOS_PROGRAMADOS_INDISPONIVEIS` | GTFS ainda carregando (alguns segundos após subir) ou download falhou. |
 
 ## 📦 Dependências principais

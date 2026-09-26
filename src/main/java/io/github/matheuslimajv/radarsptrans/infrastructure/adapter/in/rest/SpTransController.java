@@ -1,9 +1,11 @@
 package io.github.matheuslimajv.radarsptrans.infrastructure.adapter.in.rest;
 
+import io.github.matheuslimajv.radarsptrans.domain.model.Itinerario;
 import io.github.matheuslimajv.radarsptrans.domain.model.Linha;
 import io.github.matheuslimajv.radarsptrans.domain.model.ParadaProxima;
 import io.github.matheuslimajv.radarsptrans.domain.model.PosicaoLinha;
 import io.github.matheuslimajv.radarsptrans.domain.model.TempoEsperaParada;
+import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarItinerarioUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarLinhasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarParadasProximasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarPosicaoPorCodigoUseCase;
@@ -32,17 +34,20 @@ public class SpTransController {
     private final BuscarLinhasUseCase buscarLinhasUseCase;
     private final BuscarParadasProximasUseCase buscarParadasProximasUseCase;
     private final CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+    private final BuscarItinerarioUseCase buscarItinerarioUseCase;
 
     public SpTransController(BuscarPosicaoPorTermoUseCase buscarPosicaoPorTermoUseCase,
                              BuscarPosicaoPorCodigoUseCase buscarPosicaoPorCodigoUseCase,
                              BuscarLinhasUseCase buscarLinhasUseCase,
                              BuscarParadasProximasUseCase buscarParadasProximasUseCase,
-                             CalcularTempoEsperaUseCase calcularTempoEsperaUseCase) {
+                             CalcularTempoEsperaUseCase calcularTempoEsperaUseCase,
+                             BuscarItinerarioUseCase buscarItinerarioUseCase) {
         this.buscarPosicaoPorTermoUseCase = buscarPosicaoPorTermoUseCase;
         this.buscarPosicaoPorCodigoUseCase = buscarPosicaoPorCodigoUseCase;
         this.buscarLinhasUseCase = buscarLinhasUseCase;
         this.buscarParadasProximasUseCase = buscarParadasProximasUseCase;
         this.calcularTempoEsperaUseCase = calcularTempoEsperaUseCase;
+        this.buscarItinerarioUseCase = buscarItinerarioUseCase;
     }
 
     @GetMapping("/linhas")
@@ -84,5 +89,12 @@ public class SpTransController {
             @RequestParam("longitude") @DecimalMin("-180") @DecimalMax("180") double longitude,
             @RequestParam(value = "codigoLinha", required = false) @Positive Integer codigoLinha) {
         return calcularTempoEsperaUseCase.calcularTempoEspera(termosBusca, codigoLinha, latitude, longitude);
+    }
+
+    /** Paradas da linha em ordem de passagem, com o tempo de percurso programado (GTFS). */
+    @GetMapping("/itinerario")
+    public Itinerario itinerario(@RequestParam("letreiro") @NotBlank String letreiro,
+                                 @RequestParam("sentido") @Min(1) @Max(2) int sentido) {
+        return buscarItinerarioUseCase.buscarItinerario(letreiro, sentido);
     }
 }

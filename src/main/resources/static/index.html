@@ -1,120 +1,69 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
     <title>Radar SPTrans</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
           integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <style>
-        html, body {
-            margin: 0;
-            height: 100%;
-            font-family: system-ui, sans-serif;
-        }
-
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-
-        #painel {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
-            width: min(340px, calc(100vw - 20px));
-            max-height: calc(100vh - 20px);
-            overflow-y: auto;
-            box-sizing: border-box;
-            padding: 12px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-        }
-
-        #form-busca {
-            display: flex;
-            gap: 6px;
-        }
-
-        #form-busca input {
-            flex: 1;
-            min-width: 0;
-            padding: 6px;
-        }
-
-        #linhas {
-            list-style: none;
-            margin: 8px 0 0;
-            padding: 0;
-            max-height: 30vh;
-            overflow-y: auto;
-        }
-
-        #linhas button {
-            width: 100%;
-            padding: 6px;
-            margin-top: 4px;
-            text-align: left;
-            background: #f4f4f4;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        #linhas button.ativa {
-            background: #dbeafe;
-            border-color: #60a5fa;
-        }
-
-        #espera {
-            margin-top: 8px;
-            padding: 8px;
-            border-radius: 6px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            font-size: 0.9em;
-            line-height: 1.4;
-        }
-
-        #espera[hidden] {
-            display: none;
-        }
-
-        #espera .destaque {
-            font-size: 1.15em;
-            font-weight: 600;
-        }
-
-        #espera .nota {
-            color: #555;
-            font-size: 0.85em;
-        }
-
-        #status, #dica {
-            margin: 8px 0 0;
-            font-size: 0.85em;
-            color: #555;
-        }
-    </style>
+    <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
-    <div id="map"></div>
+<div id="app">
+    <aside id="painel">
+        <header class="topo">
+            <h1>Radar SPTrans</h1>
+            <p>Encontre o ônibus que vai passar perto de você</p>
+        </header>
 
-    <div id="painel">
-        <form id="form-busca">
-            <input id="termo" type="search" placeholder="Linha ou destino (ex.: 8000, Lapa)" required>
-            <button type="submit">Buscar</button>
-        </form>
-        <ul id="linhas"></ul>
-        <div id="espera" aria-live="polite" hidden></div>
-        <p id="status" aria-live="polite"></p>
-        <p id="dica">Clique no mapa para definir onde você está.</p>
-    </div>
+        <!-- Etapa 1: escolher linha e destino -->
+        <section id="etapa-busca" aria-labelledby="titulo-busca">
+            <h2 id="titulo-busca" class="etapa"><span class="numero">1</span> Qual linha?</h2>
+            <form id="form-busca" role="search">
+                <label for="termo" class="sr-only">Número ou nome da linha</label>
+                <input id="termo" type="search" placeholder="Ex.: 848L, 8000, Lapa" autocomplete="off"
+                       enterkeyhint="search">
+                <button type="submit">Buscar</button>
+            </form>
+            <div id="resultados" aria-live="polite"></div>
+        </section>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="mapa.js"></script>
+        <!-- Etapa 2 e 3: localização e rastreio -->
+        <section id="etapa-rastreio" hidden>
+            <div class="linha-escolhida">
+                <span id="letreiro" class="letreiro"></span>
+                <div class="sentido">
+                    <div class="para">para <strong id="destino"></strong></div>
+                    <div class="de">saindo de <span id="origem"></span></div>
+                </div>
+                <button id="trocar-linha" type="button" class="botao-link">Trocar</button>
+            </div>
+
+            <div id="card-local" class="card">
+                <h2 class="etapa"><span class="numero">2</span> Onde você está?</h2>
+                <p class="nota">Toque no mapa para marcar sua posição, ou use o GPS.</p>
+                <button id="usar-gps" type="button" class="botao-secundario">Usar minha localização</button>
+            </div>
+
+            <div id="card-rastreio" class="card destaque" aria-live="polite" hidden></div>
+            <div id="card-proximos" class="card" hidden></div>
+            <p id="info-linha" class="nota"></p>
+
+            <footer class="rodape">
+                <span id="contador" aria-hidden="true"></span>
+                <button id="atualizar" type="button" class="botao-link">Atualizar agora</button>
+            </footer>
+        </section>
+    </aside>
+
+    <main id="mapa" aria-label="Mapa"></main>
+</div>
+
+<div id="aviso" role="status" hidden></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
 </body>
 </html>

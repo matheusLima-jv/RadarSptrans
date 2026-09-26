@@ -8,7 +8,7 @@
 		<version>3.3.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>RadarSptrans.example</groupId>
+	<groupId>io.github.matheuslimajv</groupId>
 	<artifactId>RadarSPT</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>RadarSPT</name>

@@ -1,9 +1,9 @@
 package RadarSptrans.example.RadarSPT.domain.port.in;
 
-import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
+import RadarSptrans.example.RadarSPT.domain.model.Linha;
 
 import java.util.List;
 
 public interface BuscarLinhasUseCase {
-    List<LinhaResponse> buscarLinhas(String termosBusca);
+    List<Linha> buscarLinhas(String termosBusca);
 }

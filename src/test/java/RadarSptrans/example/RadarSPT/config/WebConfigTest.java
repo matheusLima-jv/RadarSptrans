@@ -1,8 +1,11 @@
 package RadarSptrans.example.RadarSPT.config;
 
+import RadarSptrans.example.RadarSPT.domain.model.PosicaoLinha;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarLinhasUseCase;
+import RadarSptrans.example.RadarSPT.domain.port.in.BuscarParadasProximasUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorTermoUseCase;
+import RadarSptrans.example.RadarSPT.domain.port.in.CalcularTempoEsperaUseCase;
 import RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest.SpTransController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,18 +41,42 @@ class WebConfigTest {
     @MockBean
     private BuscarLinhasUseCase buscarLinhasUseCase;
 
+    @MockBean
+    private BuscarParadasProximasUseCase buscarParadasProximasUseCase;
+
+    @MockBean
+    private CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+
     @Test
-    void shouldAllowCorsForAllConfiguredOrigins() throws Exception {
-        mockMvc.perform(options("/api/sptrans/buscar")
-                        .header(HttpHeaders.ORIGIN, "https://example.com")
-                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+    void deveLiberarPreflightParaTodasAsOrigensConfiguradas() throws Exception {
+        for (String origem : List.of("https://example.com", "https://another.com")) {
+            mockMvc.perform(options("/api/sptrans/posicao")
+                            .header(HttpHeaders.ORIGIN, origem)
+                            .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origem));
+        }
+    }
+
+    @Test
+    void deveIncluirCabecalhoCorsNaRequisicaoReal() throws Exception {
+        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo(123)).thenReturn(new PosicaoLinha("10:00", List.of()));
+
+        mockMvc.perform(get("/api/sptrans/posicao").param("codigoLinha", "123")
+                        .header(HttpHeaders.ORIGIN, "https://example.com"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://example.com"));
+    }
 
-        mockMvc.perform(options("/api/sptrans/buscar")
-                        .header(HttpHeaders.ORIGIN, "https://another.com")
+    @Test
+    void deveRecusarOrigemNaoConfiguradaEMetodoDeEscrita() throws Exception {
+        mockMvc.perform(options("/api/sptrans/posicao")
+                        .header(HttpHeaders.ORIGIN, "https://evil.com")
                         .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
-                .andExpect(status().isOk())
-                .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "https://another.com"));
+                .andExpect(status().isForbidden());
+        mockMvc.perform(options("/api/sptrans/posicao")
+                        .header(HttpHeaders.ORIGIN, "https://example.com")
+                        .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "DELETE"))
+                .andExpect(status().isForbidden());
     }
 }

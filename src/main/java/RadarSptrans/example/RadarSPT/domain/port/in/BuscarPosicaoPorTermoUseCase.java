@@ -1,7 +1,7 @@
 package RadarSptrans.example.RadarSPT.domain.port.in;
 
-import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
+import RadarSptrans.example.RadarSPT.domain.model.PosicaoLinha;
 
 public interface BuscarPosicaoPorTermoUseCase {
-    PosicaoBusResponse buscarPorTermo(String termosBusca, int indice);
+    PosicaoLinha buscarPorTermo(String termosBusca, int indice);
 }

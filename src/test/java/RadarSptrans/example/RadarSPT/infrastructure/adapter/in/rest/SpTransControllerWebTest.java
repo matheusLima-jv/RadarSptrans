@@ -1,10 +1,17 @@
 package RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest;
 
+import RadarSptrans.example.RadarSPT.domain.exception.DadosProgramadosIndisponiveisException;
 import RadarSptrans.example.RadarSPT.domain.exception.SpTransIndisponivelException;
-import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
+import RadarSptrans.example.RadarSPT.domain.model.FonteChegadas;
+import RadarSptrans.example.RadarSPT.domain.model.Linha;
+import RadarSptrans.example.RadarSPT.domain.model.Parada;
+import RadarSptrans.example.RadarSPT.domain.model.ParadaProxima;
+import RadarSptrans.example.RadarSPT.domain.model.TempoEsperaParada;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarLinhasUseCase;
+import RadarSptrans.example.RadarSPT.domain.port.in.BuscarParadasProximasUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorTermoUseCase;
+import RadarSptrans.example.RadarSPT.domain.port.in.CalcularTempoEsperaUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,11 +23,15 @@ import java.util.List;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = SpTransController.class)
 class SpTransControllerWebTest {
+
+    private static final Linha LINHA = new Linha(504, "7545-10", 1, "JD. JOÃO XXIII", "PÇA. RAMOS DE AZEVEDO", false);
+    private static final Parada PARADA = new Parada(260015039L, "Paulista B/C", null, -23.555883, -46.66306);
 
     @Autowired
     private MockMvc mockMvc;
@@ -34,14 +45,28 @@ class SpTransControllerWebTest {
     @MockBean
     private BuscarLinhasUseCase buscarLinhasUseCase;
 
-    @Test
-    void deveListarLinhas() throws Exception {
-        when(buscarLinhasUseCase.buscarLinhas("8000"))
-                .thenReturn(List.of(new LinhaResponse(33887, false, "8000", 1, 10, "Lapa", "Centro")));
+    @MockBean
+    private BuscarParadasProximasUseCase buscarParadasProximasUseCase;
 
-        mockMvc.perform(get("/api/sptrans/linhas").param("termosBusca", "8000"))
+    @MockBean
+    private CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+
+    @Test
+    void deveListarLinhasComNomesDoDominio() throws Exception {
+        when(buscarLinhasUseCase.buscarLinhas("7545")).thenReturn(List.of(LINHA));
+
+        mockMvc.perform(get("/api/sptrans/linhas").param("termosBusca", "7545"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].cl").value(33887));
+                .andExpect(jsonPath("$[0].codigo").value(504))
+                .andExpect(jsonPath("$[0].letreiro").value("7545-10"))
+                .andExpect(jsonPath("$[0].destino").value("PÇA. RAMOS DE AZEVEDO"));
+    }
+
+    @Test
+    void buscarPorIndiceSinalizaDescontinuacao() throws Exception {
+        mockMvc.perform(get("/api/sptrans/buscar").param("termosBusca", "8000").param("indice", "1"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Deprecation", "true"));
     }
 
     @Test
@@ -78,5 +103,54 @@ class SpTransControllerWebTest {
         mockMvc.perform(get("/api/sptrans/posicao").param("codigoLinha", "123"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.code").value("SPTRANS_INDISPONIVEL"));
+    }
+
+    @Test
+    void deveListarParadasProximasComRaioPadrao() throws Exception {
+        when(buscarParadasProximasUseCase.buscarParadasProximas(-23.5565, -46.6625, 500, 20))
+                .thenReturn(List.of(new ParadaProxima(PARADA, 89, List.of("7545-10"))));
+
+        mockMvc.perform(get("/api/sptrans/paradas/proximas")
+                        .param("latitude", "-23.5565").param("longitude", "-46.6625"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].parada.codigo").value(260015039L))
+                .andExpect(jsonPath("$[0].distanciaMetros").value(89))
+                .andExpect(jsonPath("$[0].linhas[0]").value("7545-10"));
+    }
+
+    @Test
+    void deveRejeitarCoordenadaInvalidaERaioAcimaDoLimite() throws Exception {
+        mockMvc.perform(get("/api/sptrans/paradas/proximas").param("latitude", "-123").param("longitude", "-46.6"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/sptrans/paradas/proximas")
+                        .param("latitude", "-23.5").param("longitude", "-46.6").param("raio", "50000"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(buscarParadasProximasUseCase);
+    }
+
+    @Test
+    void deveCalcularTempoDeEspera() throws Exception {
+        when(calcularTempoEsperaUseCase.calcularTempoEspera("7545", 504, -23.5565, -46.6625))
+                .thenReturn(List.of(new TempoEsperaParada(LINHA, PARADA, 89, 15.0, 7.5, List.of(), null, null,
+                        FonteChegadas.SEM_DADOS, "20:04")));
+
+        mockMvc.perform(get("/api/sptrans/paradas/tempo-espera").param("termosBusca", "7545")
+                        .param("codigoLinha", "504").param("latitude", "-23.5565").param("longitude", "-46.6625"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].intervaloProgramadoMinutos").value(15.0))
+                .andExpect(jsonPath("$[0].esperaMediaMinutos").value(7.5))
+                .andExpect(jsonPath("$[0].fonteChegadas").value("SEM_DADOS"));
+    }
+
+    @Test
+    void deveRetornar503EnquantoGtfsNaoCarregou() throws Exception {
+        when(calcularTempoEsperaUseCase.calcularTempoEspera("7545", null, -23.5, -46.6))
+                .thenThrow(new DadosProgramadosIndisponiveisException());
+
+        mockMvc.perform(get("/api/sptrans/paradas/tempo-espera").param("termosBusca", "7545")
+                        .param("latitude", "-23.5").param("longitude", "-46.6"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.code").value("DADOS_PROGRAMADOS_INDISPONIVEIS"));
     }
 }

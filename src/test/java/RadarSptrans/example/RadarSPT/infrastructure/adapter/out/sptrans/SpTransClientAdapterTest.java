@@ -2,8 +2,10 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
 import RadarSptrans.example.RadarSPT.domain.exception.SessaoExpiradaException;
 import RadarSptrans.example.RadarSPT.domain.exception.SpTransIndisponivelException;
-import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
-import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
+import RadarSptrans.example.RadarSPT.domain.model.Linha;
+import RadarSptrans.example.RadarSPT.domain.model.PrevisaoParada;
+import RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans.dto.SpTransLinha;
+import RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans.dto.SpTransPrevisao;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -14,11 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class SpTransClientAdapterTest {
@@ -33,39 +33,36 @@ class SpTransClientAdapterTest {
     }
 
     @Test
-    void deveEnviarCookieSaneadoNaBuscaDeLinhas() {
-        List<LinhaResponse> expected = List.of();
-        when(spTransClient.buscarLinha(eq("linha"), eq("cookie=valor"))).thenReturn(expected);
+    void deveConverterLinhasParaModeloDeDominio() {
+        when(spTransClient.buscarLinha("8000", "cookie=valor"))
+                .thenReturn(List.of(new SpTransLinha(1273, false, "8000", 1, 10, "PÇA. RAMOS DE AZEVEDO", "TERM. LAPA")));
 
-        List<LinhaResponse> result = adapter.buscarLinha("linha", "cookie=valor; Path=/; HttpOnly");
+        List<Linha> linhas = adapter.buscarLinhas("8000", "cookie=valor");
 
-        assertSame(expected, result);
-        verify(spTransClient).buscarLinha("linha", "cookie=valor");
+        assertEquals(List.of(new Linha(1273, "8000-10", 1, "TERM. LAPA", "PÇA. RAMOS DE AZEVEDO", false)), linhas);
     }
 
     @Test
-    void deveEnviarCookieSaneadoNaBuscaDePosicao() {
-        PosicaoBusResponse expected = new PosicaoBusResponse();
-        when(spTransClient.localBus(eq(123), eq("cookie=valor"))).thenReturn(expected);
+    void deveRetornarPrevisaoVaziaQuandoLinhaNaoPassaNaParada() {
+        when(spTransClient.previsao(260015039L, 504, "cookie=valor")).thenReturn(new SpTransPrevisao("19:26", null));
 
-        PosicaoBusResponse result = adapter.buscarPosicaoLinha(123, "cookie=valor; Secure");
+        PrevisaoParada previsao = adapter.buscarPrevisao(260015039L, 504, "cookie=valor");
 
-        assertSame(expected, result);
-        verify(spTransClient).localBus(123, "cookie=valor");
+        assertEquals(PrevisaoParada.vazia("19:26"), previsao);
     }
 
     @Test
     void deveLancarSessaoExpiradaQuandoSpTransRetorna401() {
-        when(spTransClient.localBus(eq(123), eq("cookie=valor"))).thenThrow(erroFeign(401));
+        when(spTransClient.localBus(123, "cookie=valor")).thenThrow(erroFeign(401));
 
         assertThrows(SessaoExpiradaException.class, () -> adapter.buscarPosicaoLinha(123, "cookie=valor"));
     }
 
     @Test
     void deveLancarIndisponivelQuandoSpTransRetornaErro() {
-        when(spTransClient.buscarLinha(eq("linha"), eq("cookie=valor"))).thenThrow(erroFeign(503));
+        when(spTransClient.buscarLinha("linha", "cookie=valor")).thenThrow(erroFeign(503));
 
-        assertThrows(SpTransIndisponivelException.class, () -> adapter.buscarLinha("linha", "cookie=valor"));
+        assertThrows(SpTransIndisponivelException.class, () -> adapter.buscarLinhas("linha", "cookie=valor"));
     }
 
     private FeignException erroFeign(int status) {

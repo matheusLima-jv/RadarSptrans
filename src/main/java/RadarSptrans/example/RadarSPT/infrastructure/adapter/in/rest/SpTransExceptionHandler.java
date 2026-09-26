@@ -2,6 +2,7 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest;
 
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
+import RadarSptrans.example.RadarSPT.domain.exception.DadosProgramadosIndisponiveisException;
 import RadarSptrans.example.RadarSPT.domain.exception.IndiceLinhaInvalidoException;
 import RadarSptrans.example.RadarSPT.domain.exception.SessaoExpiradaException;
 import RadarSptrans.example.RadarSPT.domain.exception.SpTransIndisponivelException;
@@ -27,6 +28,7 @@ public class SpTransExceptionHandler {
     private static final String CODE_AUTENTICACAO_FALHOU = "AUTENTICACAO_FALHOU";
     private static final String CODE_COOKIE_NAO_ENCONTRADO = "COOKIE_SESSAO_NAO_ENCONTRADO";
     private static final String CODE_SPTRANS_INDISPONIVEL = "SPTRANS_INDISPONIVEL";
+    private static final String CODE_DADOS_PROGRAMADOS_INDISPONIVEIS = "DADOS_PROGRAMADOS_INDISPONIVEIS";
 
     @ExceptionHandler(IndiceLinhaInvalidoException.class)
     public ResponseEntity<ApiErrorResponse> handleIndiceLinhaInvalido(IndiceLinhaInvalidoException exception) {
@@ -55,6 +57,14 @@ public class SpTransExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleSpTransIndisponivel(RuntimeException exception) {
         log.error("Falha ao consultar a SPTrans: {}", exception.getMessage(), exception.getCause());
         return buildResponse(HttpStatus.BAD_GATEWAY, CODE_SPTRANS_INDISPONIVEL, exception.getMessage());
+    }
+
+    // 503: condição temporária (GTFS ainda carregando após o startup ou download falhou).
+    @ExceptionHandler(DadosProgramadosIndisponiveisException.class)
+    public ResponseEntity<ApiErrorResponse> handleDadosProgramadosIndisponiveis(
+            DadosProgramadosIndisponiveisException exception) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, CODE_DADOS_PROGRAMADOS_INDISPONIVEIS,
+                exception.getMessage());
     }
 
     private String mensagemParametroInvalido(Exception exception) {

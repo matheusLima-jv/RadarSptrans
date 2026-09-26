@@ -2,6 +2,7 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest;
 
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
+import RadarSptrans.example.RadarSPT.domain.exception.DadosProgramadosIndisponiveisException;
 import RadarSptrans.example.RadarSPT.domain.exception.IndiceLinhaInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,5 +45,14 @@ class SpTransExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
         assertEquals("COOKIE_SESSAO_NAO_ENCONTRADO", response.getBody().code());
         assertEquals("Cookie de sessão não encontrado na resposta de autenticação.", response.getBody().message());
+    }
+
+    @Test
+    void deveMapearDadosProgramadosIndisponiveisParaServiceUnavailable() {
+        ResponseEntity<ApiErrorResponse> response =
+                handler.handleDadosProgramadosIndisponiveis(new DadosProgramadosIndisponiveisException());
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals("DADOS_PROGRAMADOS_INDISPONIVEIS", response.getBody().code());
     }
 }

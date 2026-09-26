@@ -3,7 +3,6 @@ package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.CookieSessaoNaoEncontradoException;
 import RadarSptrans.example.RadarSPT.domain.exception.SpTransIndisponivelException;
-import RadarSptrans.example.RadarSPT.domain.model.LinhaResponse;
 import feign.Request;
 import feign.Response;
 import feign.RetryableException;
@@ -93,19 +92,6 @@ class SpTransAuthClientAdapterTest {
 
         AutenticacaoException exception = assertThrows(AutenticacaoException.class, adapter::autenticar);
         assertEquals("Falha ao autenticar com o serviço SPTrans.", exception.getMessage());
-    }
-
-    @Test
-    void deveEnviarCookieSanitizadoAoClienteFeign() {
-        SpTransClient spTransClient = mock(SpTransClient.class);
-        SpTransClientAdapter spTransClientAdapter = new SpTransClientAdapter(spTransClient);
-        List<LinhaResponse> respostaEsperada = List.of();
-        when(spTransClient.buscarLinha("busca", "cookie=valor")).thenReturn(respostaEsperada);
-
-        List<LinhaResponse> resposta = spTransClientAdapter.buscarLinha("busca", "cookie=valor");
-
-        assertEquals(respostaEsperada, resposta);
-        verify(spTransClient).buscarLinha("busca", "cookie=valor");
     }
 
     @Test

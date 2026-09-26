@@ -4,6 +4,7 @@ import io.github.matheuslimajv.radarsptrans.domain.exception.AutenticacaoExcepti
 import io.github.matheuslimajv.radarsptrans.domain.exception.IndiceLinhaInvalidoException;
 import io.github.matheuslimajv.radarsptrans.domain.model.PosicaoLinha;
 import io.github.matheuslimajv.radarsptrans.domain.model.Veiculo;
+import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarItinerarioUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarLinhasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarParadasProximasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarPosicaoPorCodigoUseCase;
@@ -39,6 +40,9 @@ class SpTransControllerTest {
 
     @Mock
     private CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+
+    @Mock
+    private BuscarItinerarioUseCase buscarItinerarioUseCase;
 
     @InjectMocks
     private SpTransController controller;

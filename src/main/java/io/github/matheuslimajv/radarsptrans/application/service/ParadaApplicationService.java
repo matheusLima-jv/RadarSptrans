@@ -1,6 +1,7 @@
 package io.github.matheuslimajv.radarsptrans.application.service;
 
 import io.github.matheuslimajv.radarsptrans.domain.exception.DadosProgramadosIndisponiveisException;
+import io.github.matheuslimajv.radarsptrans.domain.exception.ItinerarioNaoEncontradoException;
 import io.github.matheuslimajv.radarsptrans.domain.model.ChegadaEstimada;
 import io.github.matheuslimajv.radarsptrans.domain.model.FonteChegadas;
 import io.github.matheuslimajv.radarsptrans.domain.model.Itinerario;
@@ -11,6 +12,7 @@ import io.github.matheuslimajv.radarsptrans.domain.model.ParadaProxima;
 import io.github.matheuslimajv.radarsptrans.domain.model.PosicaoLinha;
 import io.github.matheuslimajv.radarsptrans.domain.model.PrevisaoParada;
 import io.github.matheuslimajv.radarsptrans.domain.model.TempoEsperaParada;
+import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarItinerarioUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarLinhasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarParadasProximasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.CalcularTempoEsperaUseCase;
@@ -32,7 +34,8 @@ import static io.github.matheuslimajv.radarsptrans.domain.service.CalculadoraTem
 import static io.github.matheuslimajv.radarsptrans.domain.service.CalculadoraTempoEspera.intervaloMedioMinutos;
 
 @Service
-public class ParadaApplicationService implements BuscarParadasProximasUseCase, CalcularTempoEsperaUseCase {
+public class ParadaApplicationService implements BuscarParadasProximasUseCase, CalcularTempoEsperaUseCase,
+        BuscarItinerarioUseCase {
 
     // Um termo amplo ("Lapa") casa com 150+ linhas; os dados em tempo real (até 3 chamadas à SPTrans
     // por linha) só são consultados para as linhas com parada mais perto do usuário.
@@ -57,6 +60,13 @@ public class ParadaApplicationService implements BuscarParadasProximasUseCase, C
     public List<ParadaProxima> buscarParadasProximas(double latitude, double longitude, int raioMetros, int limite) {
         exigirDadosProgramados();
         return dadosProgramados.buscarParadasProximas(latitude, longitude, raioMetros, limite);
+    }
+
+    @Override
+    public Itinerario buscarItinerario(String letreiro, int sentido) {
+        exigirDadosProgramados();
+        return dadosProgramados.buscarItinerario(letreiro.trim(), sentido)
+                .orElseThrow(() -> new ItinerarioNaoEncontradoException(letreiro, sentido));
     }
 
     @Override

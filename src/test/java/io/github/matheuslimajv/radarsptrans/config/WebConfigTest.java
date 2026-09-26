@@ -1,6 +1,7 @@
 package io.github.matheuslimajv.radarsptrans.config;
 
 import io.github.matheuslimajv.radarsptrans.domain.model.PosicaoLinha;
+import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarItinerarioUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarLinhasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarParadasProximasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarPosicaoPorCodigoUseCase;
@@ -46,6 +47,9 @@ class WebConfigTest {
 
     @MockBean
     private CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+
+    @MockBean
+    private BuscarItinerarioUseCase buscarItinerarioUseCase;
 
     @Test
     void deveLiberarPreflightParaTodasAsOrigensConfiguradas() throws Exception {

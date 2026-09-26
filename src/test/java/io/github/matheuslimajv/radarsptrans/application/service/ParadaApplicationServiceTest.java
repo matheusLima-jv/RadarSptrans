@@ -1,6 +1,7 @@
 package io.github.matheuslimajv.radarsptrans.application.service;
 
 import io.github.matheuslimajv.radarsptrans.domain.exception.DadosProgramadosIndisponiveisException;
+import io.github.matheuslimajv.radarsptrans.domain.exception.ItinerarioNaoEncontradoException;
 import io.github.matheuslimajv.radarsptrans.domain.model.ChegadaPrevista;
 import io.github.matheuslimajv.radarsptrans.domain.model.FonteChegadas;
 import io.github.matheuslimajv.radarsptrans.domain.model.Itinerario;
@@ -30,6 +31,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -161,5 +163,19 @@ class ParadaApplicationServiceTest {
                 () -> service.calcularTempoEspera("7545", null, -23.5, -46.6));
         assertThrows(DadosProgramadosIndisponiveisException.class,
                 () -> service.buscarParadasProximas(-23.5, -46.6, 500, 10));
+    }
+
+    @Test
+    void deveBuscarItinerarioIgnorandoEspacos() {
+        when(dadosProgramados.buscarItinerario("7545-10", 1)).thenReturn(Optional.of(ITINERARIO));
+
+        assertSame(ITINERARIO, service.buscarItinerario(" 7545-10 ", 1));
+    }
+
+    @Test
+    void deveFalharQuandoItinerarioNaoExiste() {
+        when(dadosProgramados.buscarItinerario("9999-10", 1)).thenReturn(Optional.empty());
+
+        assertThrows(ItinerarioNaoEncontradoException.class, () -> service.buscarItinerario("9999-10", 1));
     }
 }

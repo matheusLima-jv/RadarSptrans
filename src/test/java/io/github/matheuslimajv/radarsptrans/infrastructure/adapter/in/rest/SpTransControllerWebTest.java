@@ -1,12 +1,16 @@
 package io.github.matheuslimajv.radarsptrans.infrastructure.adapter.in.rest;
 
 import io.github.matheuslimajv.radarsptrans.domain.exception.DadosProgramadosIndisponiveisException;
+import io.github.matheuslimajv.radarsptrans.domain.exception.ItinerarioNaoEncontradoException;
 import io.github.matheuslimajv.radarsptrans.domain.exception.SpTransIndisponivelException;
 import io.github.matheuslimajv.radarsptrans.domain.model.FonteChegadas;
+import io.github.matheuslimajv.radarsptrans.domain.model.Itinerario;
+import io.github.matheuslimajv.radarsptrans.domain.model.ParadaItinerario;
 import io.github.matheuslimajv.radarsptrans.domain.model.Linha;
 import io.github.matheuslimajv.radarsptrans.domain.model.Parada;
 import io.github.matheuslimajv.radarsptrans.domain.model.ParadaProxima;
 import io.github.matheuslimajv.radarsptrans.domain.model.TempoEsperaParada;
+import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarItinerarioUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarLinhasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarParadasProximasUseCase;
 import io.github.matheuslimajv.radarsptrans.domain.port.in.BuscarPosicaoPorCodigoUseCase;
@@ -18,6 +22,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.DayOfWeek;
+import java.util.EnumSet;
 import java.util.List;
 
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -50,6 +56,9 @@ class SpTransControllerWebTest {
 
     @MockBean
     private CalcularTempoEsperaUseCase calcularTempoEsperaUseCase;
+
+    @MockBean
+    private BuscarItinerarioUseCase buscarItinerarioUseCase;
 
     @Test
     void deveListarLinhasComNomesDoDominio() throws Exception {
@@ -152,5 +161,34 @@ class SpTransControllerWebTest {
                         .param("latitude", "-23.5").param("longitude", "-46.6"))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.code").value("DADOS_PROGRAMADOS_INDISPONIVEIS"));
+    }
+
+    @Test
+    void deveRetornarItinerarioDaLinha() throws Exception {
+        when(buscarItinerarioUseCase.buscarItinerario("7545-10", 1)).thenReturn(new Itinerario("7545-10", 1,
+                List.of(new ParadaItinerario(PARADA, 0)), EnumSet.allOf(DayOfWeek.class), List.of()));
+
+        mockMvc.perform(get("/api/sptrans/itinerario").param("letreiro", "7545-10").param("sentido", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paradas[0].parada.codigo").value(260015039L))
+                .andExpect(jsonPath("$.paradas[0].segundosDesdeInicio").value(0));
+    }
+
+    @Test
+    void deveRetornar404QuandoItinerarioNaoExiste() throws Exception {
+        when(buscarItinerarioUseCase.buscarItinerario("9999-10", 2))
+                .thenThrow(new ItinerarioNaoEncontradoException("9999-10", 2));
+
+        mockMvc.perform(get("/api/sptrans/itinerario").param("letreiro", "9999-10").param("sentido", "2"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("ITINERARIO_NAO_ENCONTRADO"));
+    }
+
+    @Test
+    void deveRejeitarSentidoInvalido() throws Exception {
+        mockMvc.perform(get("/api/sptrans/itinerario").param("letreiro", "7545-10").param("sentido", "3"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(buscarItinerarioUseCase);
     }
 }

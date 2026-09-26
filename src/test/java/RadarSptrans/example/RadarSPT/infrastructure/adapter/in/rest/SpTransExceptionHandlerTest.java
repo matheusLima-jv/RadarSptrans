@@ -29,19 +29,19 @@ class SpTransExceptionHandlerTest {
     }
 
     @Test
-    void deveMapearAutenticacaoParaUnauthorized() {
+    void deveMapearAutenticacaoParaBadGateway() {
         ResponseEntity<ApiErrorResponse> response = handler.handleAutenticacao(new AutenticacaoException());
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
         assertEquals("AUTENTICACAO_FALHOU", response.getBody().code());
         assertEquals("Falha ao autenticar com o serviço SPTrans.", response.getBody().message());
     }
 
     @Test
-    void deveMapearCookieNaoEncontradoParaUnauthorized() {
+    void deveMapearCookieNaoEncontradoParaBadGateway() {
         ResponseEntity<ApiErrorResponse> response = handler.handleCookieNaoEncontrado(new CookieSessaoNaoEncontradoException());
 
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
         assertEquals("COOKIE_SESSAO_NAO_ENCONTRADO", response.getBody().code());
         assertEquals("Cookie de sessão não encontrado na resposta de autenticação.", response.getBody().message());
     }

@@ -1,5 +1,6 @@
 package RadarSptrans.example.RadarSPT.config;
 
+import RadarSptrans.example.RadarSPT.domain.port.in.BuscarLinhasUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorTermoUseCase;
 import RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest.SpTransController;
@@ -29,6 +30,9 @@ class WebConfigTest {
 
     @MockBean
     private BuscarPosicaoPorCodigoUseCase buscarPosicaoPorCodigoUseCase;
+
+    @MockBean
+    private BuscarLinhasUseCase buscarLinhasUseCase;
 
     @Test
     void shouldAllowCorsForAllConfiguredOrigins() throws Exception {

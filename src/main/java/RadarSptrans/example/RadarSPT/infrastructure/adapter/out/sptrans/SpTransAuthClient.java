@@ -1,15 +1,13 @@
 package RadarSptrans.example.RadarSPT.infrastructure.adapter.out.sptrans;
 
-import feign.Headers;
 import feign.Response;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "authClient", url = "https://api.olhovivo.sptrans.com.br/v2.1/Login")
+@FeignClient(name = "authClient", url = "${sptrans.api.url}/Login")
 public interface SpTransAuthClient {
 
     @PostMapping("/Autenticar")
-    @Headers("Content-Type: application/x-www-form-urlencoded")
     Response autenticar(@RequestParam("token") String token);
 }

@@ -1,6 +1,7 @@
 package RadarSptrans.example.RadarSPT.config;
 
 import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
+import RadarSptrans.example.RadarSPT.domain.port.in.BuscarLinhasUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorTermoUseCase;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,11 +41,14 @@ class WebConfigCorsTest {
     @MockBean
     private BuscarPosicaoPorCodigoUseCase buscarPosicaoPorCodigoUseCase;
 
+    @MockBean
+    private BuscarLinhasUseCase buscarLinhasUseCase;
+
     @BeforeEach
     void setUpMocks() {
         when(buscarPosicaoPorTermoUseCase.buscarPorTermo(anyString(), anyInt()))
                 .thenReturn(new PosicaoBusResponse());
-        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo(anyString()))
+        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo(anyInt()))
                 .thenReturn(new PosicaoBusResponse());
     }
 
@@ -65,7 +69,7 @@ class WebConfigCorsTest {
             mockMvc.perform(get("/api/sptrans/buscar")
                             .header("Origin", origin)
                             .param("termosBusca", "8000")
-                            .param("indice", "0")
+                            .param("indice", "1")
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Access-Control-Allow-Origin", origin));

@@ -18,18 +18,25 @@ O **RadarSptrans** é uma API Spring Boot que consulta o serviço público Olho 
 - Conta na **SPTrans** para gerar o token de acesso ao Olho Vivo.
 
 ## ⚙️ Configuração
-1. Renomeie o arquivo `src/main/resources/application.properties` ou crie um `application-local.properties` conforme sua estratégia.
-2. Defina o token do Olho Vivo substituindo o valor de `sptrans.api.token` ou exportando a variável de ambiente:
+1. Defina o token do Olho Vivo na variável de ambiente `SPTRANS_API_TOKEN` (o `application.properties` lê `sptrans.api.token=${SPTRANS_API_TOKEN:}`). Nunca versione o token.
    ```bash
-   export SPRING_APPLICATION_JSON='{"sptrans":{"api":{"token":"SEU_TOKEN_AQUI"}}}'
+   export SPTRANS_API_TOKEN=SEU_TOKEN_AQUI
    ```
-3. Ajuste as origens permitidas configurando a propriedade `sptrans.cors.allowed-origins`. Por padrão ela já inclui `http://localhost:5500` e `http://127.0.0.1:5500`, mas você pode sobrescrevê-la no `application.properties` ou via variável de ambiente:
+2. Ajuste as origens permitidas configurando a propriedade `sptrans.cors.allowed-origins`. Por padrão ela já inclui `http://localhost:5500` e `http://127.0.0.1:5500`, mas você pode sobrescrevê-la no `application.properties` ou via variável de ambiente:
    ```bash
-   export SPRING_APPLICATION_JSON='{"sptrans":{"cors":{"allowed-origins":"https://minhaapp.com,https://admin.minhaapp.com"}}}'
+   export SPTRANS_CORS_ALLOWED_ORIGINS=https://minhaapp.com,https://admin.minhaapp.com
    ```
    > Use uma lista separada por vírgulas para definir todas as origens necessárias em ambientes de produção ou desenvolvimento.
 
-> ⚠️ O token presente no repositório é apenas ilustrativo. Gere seu próprio token no [portal da SPTrans](http://www.sptrans.com.br/desenvolvedores/).
+Outras propriedades:
+
+| Propriedade | Padrão | Descrição |
+|---|---|---|
+| `sptrans.api.url` | `https://api.olhovivo.sptrans.com.br/v2.1` | URL base do Olho Vivo. |
+| `sptrans.api.session-ttl` | `PT20M` | Tempo máximo de reuso do cookie de sessão. Um 401 da SPTrans força novo login antes disso. |
+| `spring.cloud.openfeign.client.config.default.connect-timeout` / `read-timeout` | `3000` / `10000` ms | Timeouts das chamadas à SPTrans. |
+
+> Gere seu próprio token no [portal da SPTrans](http://www.sptrans.com.br/desenvolvedores/).
 
 ## ▶️ Como executar
 ```bash
@@ -42,6 +49,17 @@ mvn spring-boot:run
 A API ficará disponível em `http://localhost:8080`.
 
 ## 🌐 Endpoints
+A autenticação na SPTrans é feita pela própria API: o cookie de sessão fica em cache e é renovado automaticamente quando expira.
+
+### `GET /api/sptrans/linhas`
+Lista as linhas que correspondem ao termo (número ou parte do nome), em ambos os sentidos.
+
+| Parâmetro       | Tipo   | Descrição                                        |
+|-----------------|--------|--------------------------------------------------|
+| `termosBusca`   | query  | Termo de busca (ex.: `8000`, `Lapa`).            |
+
+Cada item traz `cl` (código usado em `/posicao`), `lt`/`tl` (letreiro, ex.: `8000`-`10`), `sl` (sentido: 1 = `tp` → `ts`, 2 = `ts` → `tp`), `tp`/`ts` (terminais) e `lc` (linha circular).
+
 ### `GET /api/sptrans/buscar`
 Busca linhas por termo textual e retorna a posição do ônibus correspondente ao índice informado (baseado na lista retornada pela SPTrans).
 
@@ -66,18 +84,28 @@ Retorna a posição de todos os ônibus de uma linha específica.
 |-----------------|--------|---------------------------------------------|
 | `codigoLinha`   | query  | Código numérico da linha (campo `cl`).      |
 
-> Utilize o endpoint `/buscar` para obter o código (`cl`) de uma linha antes de consultar sua posição.
+> Utilize o endpoint `/linhas` para obter o código (`cl`) de uma linha antes de consultar sua posição.
+
+### Erros
+Erros retornam `{"code": "...", "message": "..."}`:
+
+| HTTP | `code` | Quando |
+|------|--------|--------|
+| 400 | `PARAMETRO_INVALIDO` | Parâmetro ausente, não numérico ou fora do intervalo. |
+| 400 | `LINHA_INDICE_INVALIDO` | `indice` maior que a quantidade de linhas encontradas. |
+| 502 | `AUTENTICACAO_FALHOU` | Token ausente ou recusado pela SPTrans. |
+| 502 | `COOKIE_SESSAO_NAO_ENCONTRADO` | SPTrans não devolveu cookie de sessão. |
+| 502 | `SPTRANS_INDISPONIVEL` | Timeout, falha de rede ou erro HTTP da SPTrans. |
 
 ## 🗺️ Front-end de visualização (opcional)
-O diretório `front/` contém um protótipo simples com Leaflet para exibir os ônibus em mapa.
+O diretório `front/` contém um mapa com Leaflet: busque uma linha pelo painel, escolha o sentido e os ônibus aparecem no mapa, atualizados a cada 15 segundos.
 1. Inicie a API localmente.
-2. Abra `front/mapa.html` com uma extensão de servidor estático (ex.: Live Server do VSCode) para evitar bloqueios CORS.
-3. Atualize a URL da API no arquivo `front/mapa.js` caso necessário.
+2. Sirva `front/` na porta 5500 (ex.: Live Server do VSCode ou `cd front && python3 -m http.server 5500`) e abra `http://localhost:5500/mapa.html`.
+3. Se a API não estiver em `http://localhost:8080`, defina `window.RADAR_API_URL` antes de carregar `mapa.js`.
 
 ## 📦 Dependências principais
-- Spring Boot 3.3 (Web, DevTools, Test)
+- Spring Boot 3.3 (Web, Validation, DevTools, Test)
 - Spring Cloud OpenFeign 2023.0.3
-- Jackson Databind 2.15.2
 - Lombok (opcional para getters/setters)
 
 ## 🧪 Testes

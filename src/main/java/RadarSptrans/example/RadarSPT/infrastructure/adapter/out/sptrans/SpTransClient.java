@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@FeignClient(name = "spTransClient", url = "https://api.olhovivo.sptrans.com.br/v2.1")
+@FeignClient(name = "spTransClient", url = "${sptrans.api.url}")
 public interface SpTransClient {
 
     @GetMapping("/Linha/Buscar")
@@ -17,6 +17,6 @@ public interface SpTransClient {
                                     @RequestHeader("Cookie") String sessionCookie);
 
     @GetMapping("/Posicao/Linha")
-    PosicaoBusResponse localBus(@RequestParam("codigoLinha") String codigoLinha,
+    PosicaoBusResponse localBus(@RequestParam("codigoLinha") int codigoLinha,
                                 @RequestHeader("Cookie") String sessionCookie);
 }

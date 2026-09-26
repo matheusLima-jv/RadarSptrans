@@ -4,6 +4,7 @@ import RadarSptrans.example.RadarSPT.domain.exception.AutenticacaoException;
 import RadarSptrans.example.RadarSPT.domain.exception.IndiceLinhaInvalidoException;
 import RadarSptrans.example.RadarSPT.domain.model.PosicaoBus;
 import RadarSptrans.example.RadarSPT.domain.model.PosicaoBusResponse;
+import RadarSptrans.example.RadarSPT.domain.port.in.BuscarLinhasUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorCodigoUseCase;
 import RadarSptrans.example.RadarSPT.domain.port.in.BuscarPosicaoPorTermoUseCase;
 import RadarSptrans.example.RadarSPT.infrastructure.adapter.in.rest.SpTransController;
@@ -28,6 +29,9 @@ class SpTransControllerTest {
 
     @Mock
     private BuscarPosicaoPorCodigoUseCase buscarPosicaoPorCodigoUseCase;
+
+    @Mock
+    private BuscarLinhasUseCase buscarLinhasUseCase;
 
     @InjectMocks
     private SpTransController controller;
@@ -59,18 +63,18 @@ class SpTransControllerTest {
                 "11:00",
                 List.of(new PosicaoBus("4321", false, null, -22.0, -45.0, null, null))
         );
-        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo("123")).thenReturn(expectedResponse);
+        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo(123)).thenReturn(expectedResponse);
 
-        PosicaoBusResponse resultado = controller.localBus("123");
+        PosicaoBusResponse resultado = controller.localBus(123);
 
         assertEquals(expectedResponse, resultado);
-        verify(buscarPosicaoPorCodigoUseCase).buscarPorCodigo("123");
+        verify(buscarPosicaoPorCodigoUseCase).buscarPorCodigo(123);
     }
 
     @Test
     void localBusPropagaExcecoesDoCasoDeUso() {
-        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo("123")).thenThrow(new AutenticacaoException());
+        when(buscarPosicaoPorCodigoUseCase.buscarPorCodigo(123)).thenThrow(new AutenticacaoException());
 
-        assertThrows(AutenticacaoException.class, () -> controller.localBus("123"));
+        assertThrows(AutenticacaoException.class, () -> controller.localBus(123));
     }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 public interface SpTransDadosPort {
     List<LinhaResponse> buscarLinha(String termosBusca, String sessionCookie);
 
-    PosicaoBusResponse buscarPosicaoLinha(String codigoLinha, String sessionCookie);
+    PosicaoBusResponse buscarPosicaoLinha(int codigoLinha, String sessionCookie);
 }
